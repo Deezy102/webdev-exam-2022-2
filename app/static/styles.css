@@ -35,3 +35,15 @@
     background-position: center;
     background-size: cover;
 }
+body {
+    font-size: 1.25rem;
+    min-height: 100vh;
+}
+
+.avatar {
+    max-width: 100%;
+}
+
+.text {
+    text-align: justify;
+}

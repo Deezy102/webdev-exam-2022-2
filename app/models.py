@@ -1,8 +1,10 @@
 from flask import url_for
 import sqlalchemy as sa
-from app import db
+from app import db, app
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import UserMixin
+from sqlalchemy.dialects.mysql import YEAR
+from users_policy import UserPolicy
 import os
 
 class User(db.Model, UserMixin):
@@ -26,6 +28,22 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     @property
+    def is_admin(self):
+        return app.config.get('ADMIN_ROLE_ID') == self.role_id
+
+    @property
+    def is_editor(self):
+        return app.config.get('EDITOR_ROLE_ID') == self.role_id
+
+    def can(self, action, record=None):
+        users_policy = UserPolicy(record=record)
+        method = getattr(users_policy, action, None)
+        if method is not None:
+            return method()
+        return False
+
+
+    @property
     def full_name(self):
         return ' '.join([self.last_name, self.first_name, self.middle_name or ''])
 
@@ -43,6 +61,7 @@ class Role(db.Model):
         return '<Role %r>' % self.name
 
 intermediate_books_genres = db.Table(
+    'intermediate_books_genres',
     db.Column('book_id', db.Integer, db.ForeignKey('books.id'), nullable=False),
     db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), nullable=False)
 )
@@ -59,6 +78,7 @@ class Book(db.Model):
     year = db.Column(YEAR, nullable=False)
     publisher = db.Column(db.String(100), nullable=False)
     volume = db.Column(db.Integer, nullable=False)
+    image_id = db.Column(db.String(100), db.ForeignKey('images.id'))
 
     rating_num = db.Column(db.Integer, nullable=False, default=0)
     rating_sum = db.Column(db.Integer, nullable=False, default=0)

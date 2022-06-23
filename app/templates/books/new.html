@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% from 'books/form.html' import render_book_form %}
+
+{% block content %}
+
+<div class="container">
+    <h2 class="my-3 text-center text-uppercase font-weight-bold">Создание книги</h2>
+
+{{ render_book_form(url_for('books.create'), genres, current_user, book, errors_dict) }}
+</div>
+{% endblock %}

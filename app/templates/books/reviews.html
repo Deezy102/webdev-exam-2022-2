@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% from 'pagination.html' import render_pagination %}
+
+{% block content %}
+
+<div class="container">
+    <form class="mb-5 mt-3 row align-items-center">
+        <div class="col-md-4 my-3">
+            <select class="form-select" id="filters" name="filters" title="Сортировка">
+                <option value="new" {% if 'new' in request.args.getlist('filters') %}selected{% endif %}>Сначала новые</option>
+                <option value="old" {% if 'old' in request.args.getlist('filters') %}selected{% endif %}>Сначала старые</option>
+                <option value="positive" {% if 'positive' in request.args.getlist('filters') %}selected{% endif %}>Сначала положительные</option>
+                <option value="negative" {% if 'negative' in request.args.getlist('filters') %}selected{% endif %}>Сначала отрицательные</option>
+            </select>
+        </div>
+    
+        <div class="col-md-2 my-3 align-self-end">
+            <button type="submit" class="btn btn-dark w-100 mt-auto">Применить</button>
+        </div>
+    </form>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Пользователь</th>
+                <th>Дата отзыва</th>
+                <th>Оценка</th>
+                <th>Текст</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for review in reviews %}
+            <tr>
+                <tr>
+                    <td>{{ review.user.first_name }} {{review.user.last_name}}</td>
+                    <td>{{ review.created_at.strftime('%d.%m.%y') }}</td>
+                    <td>{{ review.rating }}</td>
+                    <td>{{ review.text }}</td>
+                </tr>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if reviews %}
+    <div class="mb-5">
+        {{ render_pagination(pagination, request.endpoint, {'book_id': reviews[0].book.id, 'filters': request.args.getlist('filters')}) }}
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

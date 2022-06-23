@@ -1,3 +1,4 @@
+from re import L
 from flask import Flask, render_template, send_file, abort, send_from_directory, request
 from sqlalchemy import MetaData
 from flask_sqlalchemy import SQLAlchemy
@@ -26,16 +27,17 @@ migrate = Migrate(app, db)
 
 from models import User, Book, Image
 from auth import bp as auth_bp, init_login_manager
+from books import bp as books_bp
 
 app.register_blueprint(auth_bp)
-
+app.register_blueprint(books_bp)
 init_login_manager(app)
 
 @app.route('/')
 def index():
     page = request.args.get('page', 1, type=int)
 
-    books = Book.query.order_by(Book.year.desc()).all()
+    books = Book.query.order_by(Book.year.desc())
     pagination = books.paginate(page, PER_PAGE)
     books = pagination.items
 
@@ -53,3 +55,4 @@ def image(image_id):
         abort(404)
 
     return send_from_directory(app.config['UPLOAD_FOLDER'], image.storage_filename)
+

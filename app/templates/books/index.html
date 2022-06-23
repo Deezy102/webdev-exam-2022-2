@@ -7,25 +7,18 @@
         {% for book in books %}
             <div class="row p-3 border rounded mb-3" data-url="{{ url_for('books.show', book_id=book.id) }}">
                 <div class="col-md-3 mb-3 mb-md-0 d-flex align-items-center justify-content-center">
-                    <img src="{{ book.image.url }}" class="img-fluid rounded-start" alt="...">
-                    
+                    <div class="book-logo" style="background-image: url({{ book.image.url }});">
+                    </div>
                 </div>
                 <div class="col-md-9 align-items-center">
                     <div class="d-flex">
-                        <h4 class="text-uppercase">"{{ book.title }}", {{ book.author }}</h4>
+                        <h4 class="text-uppercase">{{ book.title }}</h4>
                         <p class="ms-auto rating">
                             <span>★</span> <span>{{ "%.2f" | format(book.rating) }} Рецензии: {{ book.rating_num }}</span>
                         </p> 
                     </div>
-                    <p class="text-muted my-3">Год: {{ book.year }}; Объем: {{ book.volume }} стр. </p>
-                    <p>Жанры:</p>
-                    <ul>
-                        {% for genre in book.genres %} 
-                         <li>{{ genre.name}}</li>
-                        {% endfor %}
-                    </ul>
-                        
-                    
+                    <p class="text-muted my-3">{{ book.author.full_name }}, {{ book.year }}</p>
+                    <p>Жанры: {{ book.genres | truncate(200) }}</p>
                     <div class="btn-group">
                         {% if current_user.is_authenticated %}
                             {% if current_user.can('show', record=book) %}
@@ -35,7 +28,7 @@
                                 <a class="btn btn-secondary" href="{{ url_for('books.edit', book_id=book.id) }}">Редактировать</a>
                             {% endif %}
                             {% if current_user.can('delete', record=book) %}
-                                <button type="button" class="btn btn-danger" data-url="{{ url_for('books.delete', book_id=book.id) }}" data-bs-toggle="modal" data-bs-target="#delete-book-modal">Удалить</button>
+                                <button type="button" class="btn btn-danger" data-url="{{ url_for('books.delete', book_id=book.id) }}" data-bs-toggle="modal" data-bs-target="#delete-user-modal">Удалить</button>
                             {% endif %}    
                         {% endif %}
                         
@@ -46,7 +39,7 @@
     </div>
 
     <div class="mb-5">
-        {{ render_pagination(pagination, request.endpoint) }}
+        {{ render_pagination(pagination, request.endpoint, search_params) }}
     </div>
 
     {% if current_user.is_admin %}
@@ -55,7 +48,7 @@
         </div>
     {% endif %}
     
-    <div class="modal fade" id="delete-book-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="delete-user-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-center">
           <div class="modal-content">
             <div class="modal-header">
@@ -63,7 +56,7 @@
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Вы точно хотите удалить книгу?
+                Вы точно хотите удалить книгу <span id="user-name"></span>?
                 <form action="" method="POST">
                     <input id="delete-btn" type="submit" class="d-none">
                 </form>
