@@ -104,7 +104,7 @@ def update(book_id):
     flash('Книга успешно обновлена', category='success')
     return redirect(url_for('books.show', book_id = book.id))
 
-@bp.route('/delete/<int:book_id>', methods=["POST"])
+@bp.route('/delete/<int:book_id>', methods=['GET', 'POST'])
 def delete(book_id):
     book = Book.query.get(book_id)
     try:
