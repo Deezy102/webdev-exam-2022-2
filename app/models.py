@@ -81,6 +81,7 @@ class Book(db.Model):
 
     rating_num = db.Column(db.Integer, nullable=False, default=0)
     rating_sum = db.Column(db.Integer, nullable=False, default=0)
+    views_stat = db.Column(db.Integer)
 
     genres = db.relationship('Genre', secondary=intermediate_books_genres, lazy='subquery')
     image = db.relationship('Image', cascade="all, delete", uselist=False)
@@ -140,9 +141,11 @@ class Visit(db.Model):
     __tablename__ = 'visit_logs'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
-    path = db.Column(db.String(150), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=sa.sql.func.now())
-    
+
+    user = db.relationship('User')
+    book = db.relationship('Book')
     def __repr__(self):
         return '<Visit_log %r>' % self.file_name

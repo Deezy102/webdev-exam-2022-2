@@ -27,9 +27,12 @@ migrate = Migrate(app, db)
 from models import Visit, Book, Image
 from auth import bp as auth_bp, init_login_manager
 from books import bp as books_bp
+from stats import bp as stats_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(books_bp)
+app.register_blueprint(stats_bp)
+
 init_login_manager(app)
 
 @app.route('/')
@@ -71,17 +74,15 @@ def log_visit_info():
             ).filter(
                 Visit.user_id == current_user.id
                 ).filter(
-                    Visit.path == request.path
+                    Visit.book_id == request.path[request.path.rfind('/') + 1:]
                     ).count() < 10 and
         'show' in request.path):
-        visit = Visit(user_id=current_user.id, path=request.path)
-    else:
-        visit = Visit(user_id = getattr(current_user, 'id', None), path=request.path) 
-    try:
-        db.session.add(visit)
-        db.session.commit()
-    except:
-        db.session.rollback()   
-        print("Ошибка сохранения логов")    
-    db.session.add(visit)
-    db.session.commit()
+        visit = Visit(user_id=current_user.id, book_id=request.path[request.path.rfind('/') + 1:])
+    # else:
+    #     visit = Visit(user_id = getattr(current_user, 'id', None), path=request.path) 
+        try:
+            db.session.add(visit)
+            db.session.commit()
+        except:
+            db.session.rollback()   
+            print("Ошибка сохранения логов")    

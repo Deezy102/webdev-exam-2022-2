@@ -1,0 +1,44 @@
+{% extends 'stats/base.html' %}
+
+{% from 'pagination.html' import render_pagination %}
+
+{% block tab_content %}
+
+<h2>Статистика просмотра книг</h2>
+<form>
+
+</form>
+<form>
+    <div class="mb-3">
+      <label for="from" class="form-label">Дата от:</label>
+      <input type="date" name="from" id="from">
+    </div>
+    <div class="mb-3">
+      <label for="to" class="form-label">Дата до:</label>
+      <input type="date" name="to" id="to">
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Подтвердить</button>
+</form>
+<table class="table ">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Book</th>
+            <th>Views</th>
+        </tr>        
+    </thead>
+    <tbody>
+        {% for book in books %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.views_stat }}</td>
+                </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{{ render_pagination(pagination, request.endpoint, {'from': request.args.get('from'), 'to': request.args.get('to')}) }}
+
+{% endblock %}

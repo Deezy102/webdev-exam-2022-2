@@ -35,7 +35,7 @@
                     </li>
                     {% if current_user.is_admin %}
                         <li class="nav-item" >
-                            <a class="nav-link {% if request.endpoint == 'stats.users' %}active{% endif %}" aria-current="page" href="">Статистика</a>
+                            <a class="nav-link {% if request.endpoint == 'stats.users' %}active{% endif %}" aria-current="page" href="{{ url_for('stats.users') }}">Статистика</a>
                         </li>
                     {% endif %}
                     {% if current_user.is_authenticated %}

@@ -10,30 +10,28 @@
         <tr>
             <th>#</th>
             <th>User</th>
-            <th>Path</th>
+            <th>Book</th>
             <th>Date</th>
         </tr>        
     </thead>
     <tbody>
-        {% for record in records %}
-            {% if current_user.can('get_all_stats') %}
+        {% for visit in visits %}
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>
-                        {% if record.user_id %}
-                            {{ record.last_name }} {{ record.first_name }} {{ record.middle_name or '' }}
+                        {% if visit.user %}
+                            {{ visit.user.last_name }} {{ visit.user.first_name }} {{ visit.user.middle_name or '' }}
                         {% else %}
                             Неавторизованный пользователь
                         {% endif %}
                     </td>
-                    <td>{{ record.path }}</td>
-                    <td>{{ record.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                    <td>{{ visit.book.title }}</td>
+                    <td>{{ visit.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</td>
                 </tr>
-            {% endif %}
         {% endfor %}
     </tbody>
 </table>
 
-{{ render_pagination(request.endpoint, page, total_pages) }}
+{{ render_pagination(pagination, request.endpoint) }}
 
 {% endblock %}
