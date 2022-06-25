@@ -1,3 +1,4 @@
+from email.policy import default
 from flask import url_for
 import sqlalchemy as sa
 from app import db, app
@@ -41,7 +42,6 @@ class User(db.Model, UserMixin):
         if method is not None:
             return method()
         return False
-
 
     @property
     def full_name(self):
@@ -94,7 +94,7 @@ class Book(db.Model):
             return 0
     
     def __repr__(self):
-        return '<Book %r>' % self.name
+        return '<Book %r>' % self.title
 
 class Genre(db.Model):
     __tablename__ = 'genres'
@@ -136,3 +136,14 @@ class Image(db.Model):
     @property
     def url(self):
         return url_for('image', image_id=self.id)
+
+class Visit(db.Model):
+    __tablename__ = 'visit_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    path = db.Column(db.String(150), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=sa.sql.func.now())
+    
+    def __repr__(self):
+        return '<Visit_log %r>' % self.file_name

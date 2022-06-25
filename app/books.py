@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta
 from flask import Blueprint, redirect, render_template, request, flash, url_for
 from flask_login import current_user
-from sqlalchemy import exc
+from sqlalchemy import exc, extract, func
 from app import db, app
-from models import Book, Genre, Review, Image
+from models import Book, Genre, Review, Visit
 from tools import ImageSaver
 import os
 bp = Blueprint('books', __name__, url_prefix='/books')
@@ -146,5 +147,21 @@ def create_review(book_id):
 
 @bp.route('/popular')
 def popular():
-    return render_template('books/popular.html') 
+    pop_books_paths = Book.query.with_entities(Visit.path, func.count(Visit.path).label('total')).filter(
+        datetime.today() >= datetime.today() - timedelta(days = 90) 
+        ).group_by(Visit.path).order_by('total').all()
+    # сортировка списка кортежей по убыванию второго элемента, так как desc в запросе выдавал ошибку
+    pop_books_paths.sort(key=lambda i:i[1], reverse=True)
+    pop_books = []
+    views_books = []
+    for i in pop_books_paths:
+        if 'show' in i[0]:
+            book_id = int(i[0][i[0].rfind('/') + 1:])
+            if Book.query.get(book_id) is not None and len(pop_books) < 5:
+                pop_books.append(Book.query.get(book_id))
+                views_books.append(i[1])
+    print(pop_books)
+    return render_template('books/popular.html', books=pop_books, views=views_books) 
+
+
 

@@ -1,6 +1,33 @@
 {% extends 'base.html' %}
 {% block content %}
-
-
-
+<div class="container">
+    <div class="books-list container-fluid mt-3 mb-3 my-5">
+        {% for book in books %}
+            <div class="row p-3 border rounded mb-3" data-url="{{ url_for('books.show', book_id=book.id) }}">
+                <div class="col-md-3 mb-3 mb-md-0 d-flex align-items-center justify-content-center">
+                    <img src="{{ book.image.url }}" class="img-fluid rounded-start" alt="...">
+                    
+                </div>
+                <div class="col-md-9 align-items-center">
+                    <div class="d-flex">
+                        <h4 class="text-uppercase">"{{ book.title }}", {{ book.author }}</h4>
+                        <p class="ms-auto rating">
+                            <span>★</span> <span>{{ "%.2f" | format(book.rating) }} Рецензии: {{ book.rating_num }}</span>
+                        </p> 
+                    </div>
+                    <p class="text-muted my-3">Год: {{ book.year }}; Объем: {{ book.volume }} стр.; Количество просмотров: {{ views[loop.index - 1] }} </p>
+                    <p>Жанры:</p>
+                    <ul>
+                        {% for genre in book.genres %} 
+                         <li>{{ genre.name}}</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="btn-group">    
+                        <a class="btn btn-primary" href="{{ url_for('books.show', book_id=book.id) }}">Просмотр</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

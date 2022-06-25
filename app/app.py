@@ -1,10 +1,9 @@
-from re import L
 from flask import Flask, render_template, send_file, abort, send_from_directory, request
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, extract
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 from flask_migrate import Migrate
-
-
+from flask_login import current_user
 
 app = Flask(__name__)
 application = app
@@ -25,7 +24,7 @@ metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(app, metadata=metadata)
 migrate = Migrate(app, db)
 
-from models import User, Book, Image
+from models import Visit, Book, Image
 from auth import bp as auth_bp, init_login_manager
 from books import bp as books_bp
 
@@ -56,3 +55,33 @@ def image(image_id):
 
     return send_from_directory(app.config['UPLOAD_FOLDER'], image.storage_filename)
 
+@app.before_request
+def log_visit_info():
+    if (request.endpoint == 'static' or 
+        request.args.get('download_csv') or 
+        "media" in request.path):
+       return None 
+    visit = None
+    # запись первых 10 посещений страницы конкретной книги
+    if (current_user.is_authenticated and
+        Visit.query.filter(
+            extract('day', Visit.created_at) >= datetime.today().day,
+            extract('month', Visit.created_at) >= datetime.today().month,
+            extract('year', Visit.created_at) >= datetime.today().year
+            ).filter(
+                Visit.user_id == current_user.id
+                ).filter(
+                    Visit.path == request.path
+                    ).count() < 10 and
+        'show' in request.path):
+        visit = Visit(user_id=current_user.id, path=request.path)
+    else:
+        visit = Visit(user_id = getattr(current_user, 'id', None), path=request.path) 
+    try:
+        db.session.add(visit)
+        db.session.commit()
+    except:
+        db.session.rollback()   
+        print("Ошибка сохранения логов")    
+    db.session.add(visit)
+    db.session.commit()
