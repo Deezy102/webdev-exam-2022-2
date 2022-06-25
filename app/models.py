@@ -1,4 +1,3 @@
-from email.policy import default
 from flask import url_for
 import sqlalchemy as sa
 from app import db, app

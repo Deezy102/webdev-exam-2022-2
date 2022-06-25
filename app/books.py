@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, redirect, render_template, request, flash, url_for
+from flask import Blueprint, make_response, redirect, render_template, request, flash, url_for
+from sympy import re
 from flask_login import current_user
 from sqlalchemy import exc, extract, func
 from app import db, app
@@ -74,7 +75,36 @@ def show(book_id):
     if current_user.is_authenticated:
         user_review = Review.query.filter(Review.book_id == book_id).filter(Review.user_id == current_user.id).first()
 
-    return render_template('books/show.html', book=book, reviews=reviews, user_review=user_review)
+    resp = make_response(render_template('books/show.html', book=book, reviews=reviews, user_review=user_review))
+    cookie = request.cookies.get('Recent Books') or ''
+    
+    if cookie.count('>') == 5 and f"<{book_id}>" not in cookie:
+        cookie = cookie[cookie.find('>') + 1:] + f'<{book_id}>'
+    if cookie.count('>') < 5 and f"<{book_id}>" not in cookie:
+        cookie += f'<{book_id}>'
+
+    resp.set_cookie('Recent Books', cookie)
+    return resp
+
+@bp.route('/recent')
+def recent():
+    cookie = request.cookies.get('Recent Books')
+    book_ids = []
+    k = 0
+    for i in cookie:
+        if i == '<':
+            book_ids.append('')
+        if i.isdigit():
+            book_ids[k] += i
+        if i == '>':
+            k += 1
+    books = []
+    for book_id in book_ids:
+        book = Book.query.get(book_id)
+        books.append(book)
+    books.reverse()
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!', books)
+    return render_template('books/recent.html', books=books)
 
 @bp.route('/edit/<int:book_id>')
 def edit(book_id):

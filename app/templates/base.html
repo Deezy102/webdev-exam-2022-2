@@ -25,9 +25,11 @@
                 </div>
               <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    {% if request.cookies.get('Recent Books') %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'books.recent' %}active{% endif %}" aria-current="page" href="{{ url_for('books.recent') }}">Недавно просмотренные книги</a>
                     </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'books.popular' %}active{% endif %}" aria-current="page" href="{{ url_for('books.popular') }}">Популярные книги</a>
                     </li>
