@@ -1,14 +1,21 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, send_file
+from sympy import im
+from flask_login import login_required
+from auth import check_rights
 from app import db
 from models import Book, Genre, Review, Visit, User
 from sqlalchemy import exc, extract, text
 import sqlalchemy as sa
 from datetime import timedelta
 import datetime
+from tools import generate_report
+
 bp = Blueprint('stats', __name__, url_prefix='/stats')
 
 PER_PAGE = 10
 
+@login_required
+@check_rights('get_all_stats')
 @bp.route('/users')
 def users():
     visits = Visit.query.order_by(Visit.created_at.desc())
@@ -18,13 +25,17 @@ def users():
     
     visits = pagination.items
 
+    if request.args.get('download_csv'):
+        f = generate_report(visits)
+        filename = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M_%S') + 'pages_stat.csv'
+        return send_file(f, mimetype='text/csv', as_attachment=True, attachment_filename=filename)
+
     return render_template('/stats/users.html', visits=visits, pagination=pagination)
 
-
+@login_required
+@check_rights('get_all_stats')
 @bp.route('/books')
 def books():
-    # date_from = request.args.get('from', datetime.today(), type=datetime) or datetime.today()
-    # date_to = request.args.get('to', datetime.today(), type=datetime) or datetime.today()
     # visits = Visit.query.with_entities( 
     #     Visit, 
     #     func.count(Visit.book_id).label('total')
@@ -49,7 +60,6 @@ def books():
     date_from = request.args.get('from')
     date_to = request.args.get('to')
     if date_from is None or date_from == '':
-        # date_from = datetime.datetime.combine(datetime.datetime.now().date(), datetime.time(hour=0, minute=0, second=0)) 
         date_from = datetime.datetime.today() - timedelta(days = 90)
     else:
         date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d") + timedelta(hours=0, minutes=0, seconds=0)
@@ -74,4 +84,10 @@ def books():
     pagination = books.paginate(page, PER_PAGE)
     
     books = pagination.items
+
+    if request.args.get('download_csv'):
+        f = generate_report(books)
+        filename = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M_%S') + 'pages_stat.csv'
+        return send_file(f, mimetype='text/csv', as_attachment=True, attachment_filename=filename)
+
     return render_template('/stats/books.html', books=books, pagination=pagination, date_from=date_from, date_to=date_to)

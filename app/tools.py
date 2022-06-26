@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 import uuid
 from app import db, app
 import os
+import io
 
 class ImageSaver():
     def __init__(self, file):
@@ -31,3 +32,16 @@ class ImageSaver():
         self.md5_hash = hashlib.md5(self.file.read()).hexdigest()
         self.file.seek(0)
         return Image.query.filter(Image.md5_hash == self.md5_hash).first()
+
+def convert_to_csv(records):
+    fields = records[0]._fields
+    result = 'No,' + ','.join(fields)+ '\n'
+    for i, record in enumerate(records):
+        result += f'{i+1},' + ','.join([str(getattr(record, f, '')) for f in fields]) + '\n'
+    return result
+
+def generate_report(records):
+    buffer = io.BytesIO()
+    buffer.write(convert_to_csv(records).encode('utf-8'))
+    buffer.seek(0)
+    return buffer

@@ -63,15 +63,16 @@ window.onload = function() {
     for (let course_elm of document.querySelectorAll('.courses-list .row')) {
         course_elm.onclick = openLink;
     }
-    if (document.getElementById('text-content')) {
+    if (document.getElementById('short_description')) {
         let easyMDE = new EasyMDE({
-            element: document.getElementById('text-content'),
+            element: document.getElementById('short_description'),
             toolbar: TOOLBAR_ITEMS,
             uploadImage: true,
             imageUploadEndpoint: '/api/images/upload',
             imageUploadFunction: imageUploadFunction
         });
     }
+
 }
 
 var myModalEl = document.getElementById('delete-book-modal')

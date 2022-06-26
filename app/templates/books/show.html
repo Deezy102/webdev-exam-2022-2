@@ -22,7 +22,7 @@
     <section class="about mb-5">
         <h2 class="mb-3 text-center text-uppercase font-weight-bold">О книге</h2>
         <p>Объем: {{ book.volume }}</p>
-        <p>{{ book.short_desc }}</p>
+        <p>{{ book_desc | safe }}</p>
     </section>
     <section class="reviews mb-5">
         <h2 class="mb-3 text-center text-uppercase font-weight-bold">Отзывы о книге</h2>
@@ -40,7 +40,7 @@
                     <tr>
                         <td>{{ review.user.login }}</td>
                         <td>{{ review.rating }}</td>
-                        <td> <textarea readonly cols="30" rows="10">{{ review.text }}</textarea></td>
+                        <td>{{ review.text }}</td>
                     </tr>
                 </tr>
                 {% endfor %}

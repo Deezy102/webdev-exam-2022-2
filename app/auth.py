@@ -2,6 +2,8 @@ from flask import Blueprint, make_response, render_template, redirect, url_for, 
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import User
 import functools
+import bleach
+
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -32,8 +34,8 @@ def check_rights(action):
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        login = request.form.get('login')
-        password = request.form.get('password')
+        login = bleach.clean(request.form.get('login'))
+        password = bleach.clean(request.form.get('password'))
         if login and password:
             user = User.query.filter_by(login=login).first()
             if user and user.check_password(password):

@@ -1,17 +1,21 @@
 from datetime import datetime, timedelta
 from flask import Blueprint, make_response, redirect, render_template, request, flash, url_for
-from flask_login import current_user
+from flask_login import current_user, login_required
 from sqlalchemy import exc, extract, func
+from auth import check_rights
 from app import db, app
 from models import Book, Genre, Review, Visit
 from tools import ImageSaver
 import os
+import bleach
+import markdown
+
 bp = Blueprint('books', __name__, url_prefix='/books')
 
 BOOK_PARAMS = ['title','short_desc' ,'year', 'publisher', 'author', 'volume']
 
 def params():
-    return {p: request.form.get(p) for p in BOOK_PARAMS }
+    return {p: bleach.clean(request.form.get(p)) for p in BOOK_PARAMS }
 
 def load_genres():
     genres = Genre.query.all()
@@ -33,10 +37,14 @@ def index():
         pagination=pagination
     )
 
+@login_required
+@check_rights('create')
 @bp.route('/new')
 def new():
     return render_template('books/new.html', genres=load_genres(), book={})
 
+@login_required
+@check_rights('create')
 @bp.route('/create', methods=["POST"])
 def create():
     
@@ -69,12 +77,13 @@ def create():
 def show(book_id):
     book = Book.query.get(book_id)
     reviews = Review.query.filter(Review.book_id == book_id).order_by(Review.created_at.desc()).limit(5).all()
+    book_desc = markdown.markdown(book.short_desc)
 
     user_review = None
     if current_user.is_authenticated:
         user_review = Review.query.filter(Review.book_id == book_id).filter(Review.user_id == current_user.id).first()
 
-    resp = make_response(render_template('books/show.html', book=book, reviews=reviews, user_review=user_review))
+    resp = make_response(render_template('books/show.html', book=book, book_desc=book_desc, reviews=reviews, user_review=user_review))
     cookie = request.cookies.get('Recent Books') or ''
     
     if cookie.count('>') == 5 and f"<{book_id}>" not in cookie:
@@ -85,6 +94,7 @@ def show(book_id):
     resp.set_cookie('Recent Books', cookie)
     return resp
 
+@login_required
 @bp.route('/recent')
 def recent():
     cookie = request.cookies.get('Recent Books')
@@ -104,20 +114,24 @@ def recent():
     books.reverse()
     return render_template('books/recent.html', books=books)
 
+@login_required
+@check_rights('update')
 @bp.route('/edit/<int:book_id>')
 def edit(book_id):
     return render_template('books/edit.html', genres=load_genres(), book=Book.query.get(book_id))
 
+@login_required
+@check_rights('update')
 @bp.route('/update/<int:book_id>', methods=["POST"])
 def update(book_id):
     try:
         book = Book.query.get(book_id)
-        book.title = request.form.get('title')
-        book.author = request.form.get('author')
-        book.year = request.form.get('year')
-        book.publisher = request.form.get('publisher')
-        book.short_desc = request.form.get('short_desc')
-        book.volume = request.form.get('volume')
+        book.title = bleach.clean(request.form.get('title'))
+        book.author = bleach.clean(request.form.get('author'))
+        book.year = bleach.clean(request.form.get('year'))
+        book.publisher = bleach.clean(request.form.get('publisher'))
+        book.short_desc = bleach.clean(request.form.get('short_desc'))
+        book.volume = bleach.clean(request.form.get('volume'))
         
         genres_id_list = request.form.getlist('genres')
 
@@ -133,6 +147,8 @@ def update(book_id):
     flash('Книга успешно обновлена', category='success')
     return redirect(url_for('books.show', book_id = book.id))
 
+@login_required
+@check_rights('delete')
 @bp.route('/delete/<int:book_id>', methods=['GET', 'POST'])
 def delete(book_id):
     book = Book.query.get(book_id)
@@ -144,6 +160,7 @@ def delete(book_id):
         flash('Ошибка удаления страницы книги', category='danger')
     return redirect(url_for('books.index'))
     
+@login_required    
 @bp.route('/<int:book_id>/reviews')
 def reviews(book_id):
     page = request.args.get('page', 1, type=int)
@@ -160,11 +177,12 @@ def reviews(book_id):
 
     return render_template('books/reviews.html', reviews=reviews, pagination=pagination)
 
+@login_required 
 @bp.route('/<int:book_id>/reviews/create', methods=["POST"])
 def create_review(book_id):
     user_id = current_user.id
     review_rating = request.form.get('review-rating')
-    review_text = request.form.get('review-text')
+    review_text = bleach.clean(request.form.get('review-text'))
     user_review = Review(user_id=user_id, rating=review_rating, text=review_text, book_id=book_id)
     db.session.add(user_review)
     book = Book.query.get(book_id)
