@@ -22,11 +22,17 @@ def users():
 
     page = request.args.get('page', 1, type=int)
     pagination = visits.paginate(page, PER_PAGE)
-    
-    visits = pagination.items
 
+    visits = pagination.items
     if request.args.get('download_csv'):
-        f = generate_report(visits)
+        visits = Visit.query.order_by(Visit.created_at.desc()).all()
+        records = []
+        for i in visits:
+            records.append({
+                'User': i.user.last_name + ' ' + i.user.first_name + ' ' + (i.user.middle_name or ''), 
+                'Book': i.book.title, 
+                'Date': i.created_at.strftime("%Y-%m-%d %H:%M:%S")})
+        f = generate_report(['User', 'Book', 'Date'], records)
         filename = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M_%S') + 'pages_stat.csv'
         return send_file(f, mimetype='text/csv', as_attachment=True, attachment_filename=filename)
 
@@ -80,14 +86,20 @@ def books():
         db.session.add(book)
         db.session.commit()
     books = Book.query.order_by(Book.views_stat.desc())
+    if request.args.get('download_csv'):
+        records = []
+        for i in books:
+            records.append({ 
+                'Book': i.title, 
+                'Views': i.views_stat})
+        f = generate_report(['Book', 'Views'] , records)
+        filename = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M_%S') + 'pages_stat.csv'
+        return send_file(f, mimetype='text/csv', as_attachment=True, attachment_filename=filename)
     page = request.args.get('page', 1, type=int)
     pagination = books.paginate(page, PER_PAGE)
     
     books = pagination.items
 
-    if request.args.get('download_csv'):
-        f = generate_report(books)
-        filename = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M_%S') + 'pages_stat.csv'
-        return send_file(f, mimetype='text/csv', as_attachment=True, attachment_filename=filename)
+    
 
     return render_template('/stats/books.html', books=books, pagination=pagination, date_from=date_from, date_to=date_to)

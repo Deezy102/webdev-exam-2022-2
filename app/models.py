@@ -148,4 +148,4 @@ class Visit(db.Model):
     user = db.relationship('User')
     book = db.relationship('Book')
     def __repr__(self):
-        return '<Visit_log %r>' % self.file_name
+        return '<Visit_log %r>' % self.id

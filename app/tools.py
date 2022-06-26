@@ -33,15 +33,14 @@ class ImageSaver():
         self.file.seek(0)
         return Image.query.filter(Image.md5_hash == self.md5_hash).first()
 
-def convert_to_csv(records):
-    fields = records[0]._fields
+def convert_to_csv(fields, records):
     result = 'No,' + ','.join(fields)+ '\n'
     for i, record in enumerate(records):
-        result += f'{i+1},' + ','.join([str(getattr(record, f, '')) for f in fields]) + '\n'
+        result += f'{i+1},' + ','.join([str(record.get(f)) for f in fields]) + '\n'
     return result
 
-def generate_report(records):
+def generate_report(fields, records):
     buffer = io.BytesIO()
-    buffer.write(convert_to_csv(records).encode('utf-8'))
+    buffer.write(convert_to_csv(fields, records).encode('utf-8'))
     buffer.seek(0)
     return buffer
