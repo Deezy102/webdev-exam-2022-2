@@ -68,6 +68,7 @@ def create():
         db.session.commit()
         print('CREATION!!!!!!!!!!!!!!!')
     except exc.SQLAlchemyError:
+        db.session.rollback()
         flash("Ошибка базы данных при создании страницы книги.", category='danger')
         return redirect(url_for('books.new'))
     flash(f'Книга "{book.title}" была успешно создана.', category='success')
@@ -142,6 +143,7 @@ def update(book_id):
         db.session.add(book)
         db.session.commit() 
     except:
+        db.session.rollback()
         flash('Ошибка при обновлении страницы книги', category='danger')
         return redirect(url_for('books.edit', book_id=book.id))
     flash('Книга успешно обновлена', category='success')
@@ -157,6 +159,7 @@ def delete(book_id):
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], book.image.storage_filename))
         db.session.commit()
     except:
+        db.session.rollback()
         flash('Ошибка удаления страницы книги', category='danger')
     return redirect(url_for('books.index'))
     
