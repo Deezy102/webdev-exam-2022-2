@@ -33,5 +33,5 @@
 </table>
 
 {{ render_pagination(pagination, request.endpoint) }}
-
+<a class="btn btn-primary" href="{{ url_for('stats.users', download_csv='True') }}">Экспорт в csv</a>
 {% endblock %}
