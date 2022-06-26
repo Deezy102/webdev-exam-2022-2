@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, request
 from app import db
 from models import Book, Genre, Review, Visit, User
-from sqlalchemy import exc, extract, func, text
-from datetime import date, datetime, timedelta
+from sqlalchemy import exc, extract, text
+import sqlalchemy as sa
+from datetime import timedelta
+import datetime
 bp = Blueprint('stats', __name__, url_prefix='/stats')
 
 PER_PAGE = 10
@@ -27,8 +29,7 @@ def books():
     #     Visit, 
     #     func.count(Visit.book_id).label('total')
     #     ).
-    date_from = request.args.get('from', '', type=str)
-    date_to = request.args.get('from', '', type=str)
+    
     # visits = Book.query.with_entities(
     #     func.count(Book.id).label('total'),
     #     Visit
@@ -45,7 +46,18 @@ def books():
     # ).group_by(
     #     Visit.book_id
     # ).join(Book, Book.id == Visit.book_id).order_by(text('total')).count()
-
+    date_from = request.args.get('from')
+    date_to = request.args.get('to')
+    if date_from is None or date_from == '':
+        # date_from = datetime.datetime.combine(datetime.datetime.now().date(), datetime.time(hour=0, minute=0, second=0)) 
+        date_from = datetime.datetime.today() - timedelta(days = 90)
+    else:
+        date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d") + timedelta(hours=0, minutes=0, seconds=0)
+    if date_to is None or date_to == '':
+        date_to = datetime.datetime.today()
+    else:
+        date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d") + timedelta(hours=23, minutes=59, seconds=59)
+    
     books = Book.query.order_by(Book.id.asc())
     for book in books:
         book.views_stat = Visit.query.filter(
@@ -53,7 +65,7 @@ def books():
         ).filter(
             date_to >= Visit.created_at
         ).filter(
-            Visit.created_at >= date_from
+            Visit.created_at >= date_from  
         ).count()
         db.session.add(book)
         db.session.commit()
@@ -62,5 +74,4 @@ def books():
     pagination = books.paginate(page, PER_PAGE)
     
     books = pagination.items
-    print('!!!!!!!!!!!!!!!!!!!!!!!!!!', books)
-    return render_template('/stats/books.html', books=books, pagination=pagination)
+    return render_template('/stats/books.html', books=books, pagination=pagination, date_from=date_from, date_to=date_to)
