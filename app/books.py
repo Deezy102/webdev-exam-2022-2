@@ -165,11 +165,19 @@ def delete(book_id):
         
         db.session.delete(book)
         db.session.commit()
+        
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], book.image.storage_filename))
     except:
         db.session.rollback()
         flash('Ошибка удаления страницы книги', category='danger')
-    return redirect(url_for('books.index'))
+    
+    resp = make_response(redirect(url_for('books.index')))
+    cookie = request.cookies.get('Recent Books') or ''
+    if f'<{book_id}>' in cookie:
+        cookie = cookie.replace(f'<{book_id}>', '')
+    resp.set_cookie('Recent Books', cookie)
+
+    return resp
     
 @bp.route('/<int:book_id>/reviews')
 @login_required    
