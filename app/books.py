@@ -37,15 +37,15 @@ def index():
         pagination=pagination
     )
 
+@bp.route('/new')
 @login_required
 @check_rights('create')
-@bp.route('/new')
 def new():
     return render_template('books/new.html', genres=load_genres(), book={})
 
+@bp.route('/create', methods=["POST"])
 @login_required
 @check_rights('create')
-@bp.route('/create', methods=["POST"])
 def create():
     
     book = Book(**params())
@@ -95,8 +95,8 @@ def show(book_id):
     resp.set_cookie('Recent Books', cookie)
     return resp
 
-@login_required
 @bp.route('/recent')
+@login_required
 def recent():
     cookie = request.cookies.get('Recent Books')
     book_ids = []
@@ -115,15 +115,15 @@ def recent():
     books.reverse()
     return render_template('books/recent.html', books=books)
 
+@bp.route('/edit/<int:book_id>')
 @login_required
 @check_rights('update')
-@bp.route('/edit/<int:book_id>')
 def edit(book_id):
     return render_template('books/edit.html', genres=load_genres(), book=Book.query.get(book_id))
 
+@bp.route('/update/<int:book_id>', methods=["POST"])
 @login_required
 @check_rights('update')
-@bp.route('/update/<int:book_id>', methods=["POST"])
 def update(book_id):
     try:
         book = Book.query.get(book_id)
@@ -149,22 +149,30 @@ def update(book_id):
     flash('Книга успешно обновлена', category='success')
     return redirect(url_for('books.show', book_id = book.id))
 
+@bp.route('/delete/<int:book_id>', methods=['GET', 'POST'])
 @login_required
 @check_rights('delete')
-@bp.route('/delete/<int:book_id>', methods=['GET', 'POST'])
 def delete(book_id):
     book = Book.query.get(book_id)
     try:
+        reviews = Review.query.filter(Review.book_id == book_id).all()
+        for review in reviews:
+            db.session.delete(review)
+
+        visits = Visit.query.filter(Visit.book_id == book_id).all()
+        for visit in visits:
+            db.session.delete(visit)
+        
         db.session.delete(book)
-        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], book.image.storage_filename))
         db.session.commit()
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], book.image.storage_filename))
     except:
         db.session.rollback()
         flash('Ошибка удаления страницы книги', category='danger')
     return redirect(url_for('books.index'))
     
-@login_required    
 @bp.route('/<int:book_id>/reviews')
+@login_required    
 def reviews(book_id):
     page = request.args.get('page', 1, type=int)
     sort_type = request.args.get('filters')
@@ -180,8 +188,8 @@ def reviews(book_id):
 
     return render_template('books/reviews.html', reviews=reviews, pagination=pagination)
 
-@login_required 
 @bp.route('/<int:book_id>/reviews/create', methods=["POST"])
+@login_required 
 def create_review(book_id):
     user_id = current_user.id
     review_rating = request.form.get('review-rating')

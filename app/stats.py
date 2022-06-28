@@ -14,9 +14,9 @@ bp = Blueprint('stats', __name__, url_prefix='/stats')
 
 PER_PAGE = 10
 
+@bp.route('/users')
 @login_required
 @check_rights('get_all_stats')
-@bp.route('/users')
 def users():
     visits = Visit.query.order_by(Visit.created_at.desc())
 
@@ -38,9 +38,9 @@ def users():
 
     return render_template('/stats/users.html', visits=visits, pagination=pagination)
 
+@bp.route('/books')
 @login_required
 @check_rights('get_all_stats')
-@bp.route('/books')
 def books():
     # visits = Visit.query.with_entities( 
     #     Visit, 

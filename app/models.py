@@ -61,6 +61,7 @@ class Role(db.Model):
 
 intermediate_books_genres = db.Table(
     'intermediate_books_genres',
+    # db.Column('id', db.Integer, primary_key=True),
     db.Column('book_id', db.Integer, db.ForeignKey('books.id'), nullable=False),
     db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), nullable=False)
 )

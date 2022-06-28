@@ -25,10 +25,8 @@
                         {% endfor %}
                     </ul>
                     <div class="btn-group">
+                        <a class="btn btn-primary" href="{{ url_for('books.show', book_id=book.id) }}">Просмотр</a>
                         {% if current_user.is_authenticated %}
-                            {% if current_user.can('show', record=book) %}
-                                <a class="btn btn-primary" href="{{ url_for('books.show', book_id=book.id) }}">Просмотр</a>
-                            {% endif %}
                             {% if current_user.can('update', record=book) %}
                                 <a class="btn btn-secondary" href="{{ url_for('books.edit', book_id=book.id) }}">Редактировать</a>
                             {% endif %}
